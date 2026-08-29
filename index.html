@@ -3,22 +3,19 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ماسح الأسماء الثلاثية - واتساب</title>
+    <title>ماسح الأسماء الثلاثية</title>
     <style>
-        /* نفس التنسيقات السابقة مع إضافة تحسينات بسيطة */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #0d1117, #161b22);
             min-height: 100vh;
             padding: 20px;
         }
-
         .container {
             max-width: 800px;
             margin: 0 auto;
@@ -28,33 +25,28 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
             border: 1px solid #30363d;
         }
-
         h1 {
             color: #ffffff;
             font-size: 28px;
             text-align: center;
             margin-bottom: 8px;
         }
-
         .subtitle {
             color: #8b949e;
             text-align: center;
             font-size: 14px;
             margin-bottom: 25px;
         }
-
         .subtitle span {
             color: #25d366;
             font-weight: bold;
         }
-
         .controls {
             display: flex;
             gap: 12px;
             margin-bottom: 20px;
             flex-wrap: wrap;
         }
-
         .controls button {
             padding: 12px 24px;
             border-radius: 12px;
@@ -68,26 +60,21 @@
             flex: 1;
             min-width: 120px;
         }
-
         .controls button:hover {
             background: #1da851;
             transform: scale(1.02);
         }
-
         .controls button:disabled {
             background: #484f58;
             cursor: not-allowed;
             transform: none;
         }
-
         .controls button.stop-btn {
             background: #f85149;
         }
-
         .controls button.stop-btn:hover {
             background: #da3633;
         }
-
         .stats {
             display: flex;
             gap: 20px;
@@ -97,19 +84,16 @@
             font-size: 14px;
             flex-wrap: wrap;
         }
-
         .stats span {
             background: #0d1117;
             padding: 8px 16px;
             border-radius: 20px;
             border: 1px solid #30363d;
         }
-
         .stats .available-count {
             color: #25d366;
             font-weight: bold;
         }
-
         .results-box {
             background: #0d1117;
             border-radius: 14px;
@@ -119,21 +103,17 @@
             overflow-y: auto;
             border: 2px solid #30363d;
         }
-
         .results-box::-webkit-scrollbar {
             width: 8px;
         }
-
         .results-box::-webkit-scrollbar-track {
             background: #0d1117;
             border-radius: 10px;
         }
-
         .results-box::-webkit-scrollbar-thumb {
             background: #30363d;
             border-radius: 10px;
         }
-
         .result-item {
             display: flex;
             justify-content: space-between;
@@ -145,42 +125,35 @@
             border: 1px solid #30363d;
             transition: 0.3s;
         }
-
         .result-item:hover {
             border-color: #25d366;
         }
-
         .result-item .name {
             color: #ffffff;
             font-size: 18px;
             font-weight: bold;
             direction: ltr;
         }
-
         .result-item .status {
             font-size: 14px;
             padding: 4px 12px;
             border-radius: 20px;
         }
-
         .result-item .status.available {
             color: #25d366;
             background: rgba(37, 211, 102, 0.15);
             border: 1px solid #25d366;
         }
-
         .result-item .status.taken {
             color: #f85149;
             background: rgba(248, 81, 73, 0.15);
             border: 1px solid #f85149;
         }
-
         .result-item .status.unknown {
             color: #f0883e;
             background: rgba(240, 136, 62, 0.15);
             border: 1px solid #f0883e;
         }
-
         .log-area {
             margin-top: 15px;
             background: #0d1117;
@@ -193,20 +166,16 @@
             font-family: monospace;
             border: 1px solid #30363d;
         }
-
         .log-area .log-entry {
             padding: 2px 0;
             border-bottom: 1px solid #161b22;
         }
-
         .log-area .log-entry.available {
             color: #25d366;
         }
-
         .log-area .log-entry.taken {
             color: #f85149;
         }
-
         .progress-bar {
             width: 100%;
             height: 6px;
@@ -215,7 +184,6 @@
             margin: 15px 0;
             overflow: hidden;
         }
-
         .progress-bar .fill {
             height: 100%;
             background: #25d366;
@@ -223,19 +191,16 @@
             transition: width 0.3s;
             width: 0%;
         }
-
         .footer {
             text-align: center;
             margin-top: 20px;
             color: #484f58;
             font-size: 12px;
         }
-
         .footer a {
             color: #25d366;
             text-decoration: none;
         }
-
         .footer .version {
             color: #f0883e;
             font-weight: bold;
@@ -290,68 +255,8 @@
         let timerInterval = null;
 
         const letters = 'abcdefghijklmnopqrstuvwxyz';
+        // ✅ استخدم مسار الخادم كـ "وسيط" لتجنب حظر المتصفح
         const apiUrl = 'https://wa-checker-f9yb.onrender.com/check/';
-
-        function updateStats(scanned, available) {
-            document.getElementById('scannedCount').textContent = scanned;
-            document.getElementById('availableCount').textContent = available;
-            const progress = (scanned / 17576) * 100;
-            document.getElementById('progressFill').style.width = Math.min(progress, 100) + '%';
-        }
-
-        function updateTimer() {
-            if (!startTime) return;
-            const elapsed = Math.floor((Date.now() - startTime) / 1000);
-            const minutes = String(Math.floor(elapsed / 60)).padStart(2, '0');
-            const seconds = String(elapsed % 60).padStart(2, '0');
-            document.getElementById('timeElapsed').textContent = `${minutes}:${seconds}`;
-        }
-
-        function addLog(message, type = '') {
-            const logArea = document.getElementById('logArea');
-            const entry = document.createElement('div');
-            entry.className = `log-entry ${type}`;
-            entry.textContent = message;
-            logArea.appendChild(entry);
-            logArea.scrollTop = logArea.scrollHeight;
-            if (logArea.children.length > 100) {
-                logArea.removeChild(logArea.firstChild);
-            }
-        }
-
-        function addResult(name, status, statusText) {
-            const resultsBox = document.getElementById('resultsBox');
-            const placeholder = resultsBox.querySelector('.placeholder');
-            if (placeholder) placeholder.remove();
-
-            const item = document.createElement('div');
-            item.className = 'result-item';
-            item.innerHTML = `
-                <span class="name">${name}</span>
-                <span class="status ${status}">${statusText}</span>
-            `;
-            resultsBox.appendChild(item);
-            resultsBox.scrollTop = resultsBox.scrollHeight;
-        }
-
-        function clearResults() {
-            document.getElementById('resultsBox').innerHTML = `
-                <div style="color: #484f58; text-align: center; padding: 40px 20px;">
-                    🗑 تم مسح النتائج
-                </div>
-            `;
-            document.getElementById('logArea').innerHTML = `
-                <div class="log-entry" style="color: #484f58;">📋 تم مسح السجل...</div>
-            `;
-            availableNames = [];
-            totalScanned = 0;
-            updateStats(0, 0);
-            document.getElementById('timeElapsed').textContent = '00:00';
-            if (timerInterval) {
-                clearInterval(timerInterval);
-                timerInterval = null;
-            }
-        }
 
         // ✅ التحقق الذكي - يعتمد على وجود رقم هاتف
         async function checkSingleName(name) {
@@ -437,13 +342,30 @@
                 const promises = batch.map(async (name) => {
                     if (stopRequested) return null;
                     try {
-                        const response = await fetch(`${apiUrl}${name}`, {
+                        // ⭐ التعديل المهم: الفحص يتم من المتصفح مباشرة إلى واتساب
+                        const response = await fetch(`https://wa.me/${name}`, {
                             signal: AbortSignal.timeout(timeout)
                         });
-                        const data = await response.json();
-                        return { name, data };
+                        const html = await response.text();
+
+                        // 🔍 الكشف عن رقم هاتف
+                        const phonePattern = /\+\d{1,3}[\s\-]?\d{1,4}[\s\-]?\d{1,10}/;
+                        const hasPhone = phonePattern.test(html);
+                        const isAvailablePage = html.includes('Chat on WhatsApp with @') ||
+                                                html.includes('Continue to WhatsApp Web') ||
+                                                html.includes('Download it now');
+
+                        let available;
+                        if (response.redirected || hasPhone) {
+                            available = false;
+                        } else if (isAvailablePage) {
+                            available = true;
+                        } else {
+                            available = true;
+                        }
+                        return { name, available };
                     } catch (error) {
-                        return { name, data: { available: null, message: 'خطأ' } };
+                        return { name, available: false };
                     }
                 });
 
@@ -452,10 +374,10 @@
                 for (const result of results) {
                     if (!result || stopRequested) continue;
 
-                    const { name, data } = result;
+                    const { name, available } = result;
                     totalScanned++;
 
-                    if (data.available === true) {
+                    if (available === true) {
                         availableNames.push(name);
                         const availableCount = parseInt(document.getElementById('availableCount').textContent) + 1;
                         document.getElementById('availableCount').textContent = availableCount;
@@ -505,6 +427,68 @@
                 stopRequested = true;
                 document.getElementById('stopBtn').disabled = true;
                 addLog('⏳ جاري الإيقاف...', '');
+            }
+        }
+
+        // دوال مساعدة
+        function updateStats(scanned, available) {
+            document.getElementById('scannedCount').textContent = scanned;
+            document.getElementById('availableCount').textContent = available;
+            const progress = (scanned / 17576) * 100;
+            document.getElementById('progressFill').style.width = Math.min(progress, 100) + '%';
+        }
+
+        function updateTimer() {
+            if (!startTime) return;
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = String(Math.floor(elapsed / 60)).padStart(2, '0');
+            const seconds = String(elapsed % 60).padStart(2, '0');
+            document.getElementById('timeElapsed').textContent = `${minutes}:${seconds}`;
+        }
+
+        function addLog(message, type = '') {
+            const logArea = document.getElementById('logArea');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = message;
+            logArea.appendChild(entry);
+            logArea.scrollTop = logArea.scrollHeight;
+            if (logArea.children.length > 100) {
+                logArea.removeChild(logArea.firstChild);
+            }
+        }
+
+        function addResult(name, status, statusText) {
+            const resultsBox = document.getElementById('resultsBox');
+            const placeholder = resultsBox.querySelector('.placeholder');
+            if (placeholder) placeholder.remove();
+
+            const item = document.createElement('div');
+            item.className = 'result-item';
+            item.innerHTML = `
+                <span class="name">${name}</span>
+                <span class="status ${status}">${statusText}</span>
+            `;
+            resultsBox.appendChild(item);
+            resultsBox.scrollTop = resultsBox.scrollHeight;
+        }
+
+        function clearResults() {
+            document.getElementById('resultsBox').innerHTML = `
+                <div style="color: #484f58; text-align: center; padding: 40px 20px;">
+                    🗑 تم مسح النتائج
+                </div>
+            `;
+            document.getElementById('logArea').innerHTML = `
+                <div class="log-entry" style="color: #484f58;">📋 تم مسح السجل...</div>
+            `;
+            availableNames = [];
+            totalScanned = 0;
+            updateStats(0, 0);
+            document.getElementById('timeElapsed').textContent = '00:00';
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
             }
         }
     </script>
