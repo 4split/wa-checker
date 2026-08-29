@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>البحث عن أسماء واتساب ثلاثية</title>
+    <title>ماسح الأسماء الثلاثية - واتساب</title>
     <style>
+        /* نفس التنسيقات السابقة مع إضافة تحسينات بسيطة */
         * {
             margin: 0;
             padding: 0;
@@ -234,6 +235,11 @@
             color: #25d366;
             text-decoration: none;
         }
+
+        .footer .version {
+            color: #f0883e;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -270,14 +276,14 @@
 
         <div class="footer">
             🔗 <a href="https://wa.me" target="_blank">WhatsApp</a> ·
-            مدعوم من <a href="https://render.com" target="_blank">Render</a>
+            مدعوم من <a href="https://render.com" target="_blank">Render</a> ·
+            <span class="version">الإصدار 2.2 - كشف ذكي</span>
         </div>
     </div>
 
     <script>
         let isScanning = false;
         let stopRequested = false;
-        let scanTimeout = null;
         let availableNames = [];
         let totalScanned = 0;
         let startTime = null;
@@ -286,7 +292,6 @@
         const letters = 'abcdefghijklmnopqrstuvwxyz';
         const apiUrl = 'https://wa-checker-f9yb.onrender.com/check/';
 
-        // تحديث الإحصائيات
         function updateStats(scanned, available) {
             document.getElementById('scannedCount').textContent = scanned;
             document.getElementById('availableCount').textContent = available;
@@ -294,7 +299,6 @@
             document.getElementById('progressFill').style.width = Math.min(progress, 100) + '%';
         }
 
-        // تحديث الزمن
         function updateTimer() {
             if (!startTime) return;
             const elapsed = Math.floor((Date.now() - startTime) / 1000);
@@ -303,7 +307,6 @@
             document.getElementById('timeElapsed').textContent = `${minutes}:${seconds}`;
         }
 
-        // إضافة سجل
         function addLog(message, type = '') {
             const logArea = document.getElementById('logArea');
             const entry = document.createElement('div');
@@ -316,7 +319,6 @@
             }
         }
 
-        // إضافة نتيجة
         function addResult(name, status, statusText) {
             const resultsBox = document.getElementById('resultsBox');
             const placeholder = resultsBox.querySelector('.placeholder');
@@ -332,7 +334,6 @@
             resultsBox.scrollTop = resultsBox.scrollHeight;
         }
 
-        // مسح النتائج
         function clearResults() {
             document.getElementById('resultsBox').innerHTML = `
                 <div style="color: #484f58; text-align: center; padding: 40px 20px;">
@@ -352,55 +353,45 @@
             }
         }
 
-        // ✅ التحقق من اسم واحد (نسخة محسنة ودقيقة)
+        // ✅ التحقق الذكي - يعتمد على وجود رقم هاتف
         async function checkSingleName(name) {
             try {
-                // 1. نطلب الصفحة كاملة
                 const response = await fetch(`https://wa.me/${name}`, {
                     signal: AbortSignal.timeout(8000)
                 });
 
-                // 2. إذا كان توجيه، محجوز
                 if (response.redirected) {
-                    return { available: false, message: '❌ محجوز (توجيه)' };
+                    return { available: false, message: '❌ محجوز' };
                 }
 
-                // 3. نحلل محتوى الصفحة
                 const html = await response.text();
 
-                // 4. علامات الاسم المحجوز
-                const isTaken = html.includes('MESSAGE ON WHATSAPP') ||
-                                html.includes('إرسال رسالة') ||
-                                html.includes('Meta Verified') ||
-                                html.includes('Verified') ||
-                                html.includes('About this business') ||
-                                html.includes('حول هذا النشاط التجاري') ||
-                                html.includes('+') ||
-                                (html.includes('message') && html.includes('business'));
+                // 🔍 الكشف عن رقم هاتف
+                const phonePattern = /\+\d{1,3}[\s\-]?\d{1,4}[\s\-]?\d{1,10}/;
+                const hasPhone = phonePattern.test(html);
 
-                // 5. علامات الاسم المتاح
-                const isAvailable = html.includes('Chat on WhatsApp with @') ||
-                                    html.includes('Continue to WhatsApp Web') ||
-                                    html.includes('Open app') ||
-                                    html.includes('Download it now');
+                // 🔍 علامات إضافية
+                const isAvailablePage = html.includes('Chat on WhatsApp with @') ||
+                                        html.includes('Continue to WhatsApp Web') ||
+                                        html.includes('Download it now') ||
+                                        html.includes('Open app');
 
-                if (isAvailable) {
+                if (hasPhone) {
+                    return { available: false, message: '❌ محجوز' };
+                }
+
+                if (isAvailablePage) {
                     return { available: true, message: '✅ متاح!' };
                 }
 
-                if (isTaken) {
-                    return { available: false, message: '❌ محجوز (حساب نشط)' };
-                }
-
-                // 6. افتراضياً، إذا لم نجد أي علامة
-                return { available: true, message: '✅ متاح (افتراضي)' };
+                return { available: true, message: '✅ متاح' };
 
             } catch (error) {
-                return { available: null, message: '⚠️ خطأ في الاتصال' };
+                return { available: null, message: '⚠️ خطأ' };
             }
         }
 
-        // دالة المسح الرئيسية (سريعة جداً) 🚀
+        // دالة المسح الرئيسية
         async function startScan() {
             if (isScanning) return;
 
@@ -420,10 +411,9 @@
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(updateTimer, 1000);
 
-            addLog('⚡ بدء المسح السريع جداً...', '');
-            addLog(`📊 إجمالي الأسماء الممكنة: 17,576`, '');
+            addLog('⚡ بدء المسح الذكي...', '');
+            addLog(`📊 إجمالي الأسماء: 17,576`, '');
 
-            // توليد جميع الأسماء الثلاثية
             const allNames = [];
             for (let i = 0; i < 26; i++) {
                 for (let j = 0; j < 26; j++) {
@@ -433,7 +423,6 @@
                 }
             }
 
-            // ⚡ إعدادات السرعة القصوى
             const batchSize = 50;
             const timeout = 2000;
 
@@ -445,7 +434,6 @@
 
                 const batch = allNames.slice(i, i + batchSize);
 
-                // ⚡ إرسال جميع الطلبات معاً (متوازي بالكامل)
                 const promises = batch.map(async (name) => {
                     if (stopRequested) return null;
                     try {
@@ -461,7 +449,6 @@
 
                 const results = await Promise.all(promises);
 
-                // معالجة النتائج بسرعة
                 for (const result of results) {
                     if (!result || stopRequested) continue;
 
@@ -484,7 +471,6 @@
                 updateStats(totalScanned, availableNames.length);
             }
 
-            // انتهى المسح
             isScanning = false;
             document.getElementById('startBtn').disabled = false;
             document.getElementById('stopBtn').disabled = true;
@@ -493,7 +479,7 @@
                 const elapsed = document.getElementById('timeElapsed').textContent;
                 addLog(`✅ اكتمل المسح في ${elapsed}!`, '');
                 addLog(`📊 تم فحص ${totalScanned} اسماً`, '');
-                addLog(`🎉 الأسماء المتاحة: ${availableNames.length}`, 'available');
+                addLog(`🎉 المتاحة: ${availableNames.length}`, 'available');
 
                 if (availableNames.length === 0) {
                     const resultsBox = document.getElementById('resultsBox');
@@ -514,12 +500,11 @@
             }
         }
 
-        // إيقاف المسح
         function stopScan() {
             if (isScanning) {
                 stopRequested = true;
                 document.getElementById('stopBtn').disabled = true;
-                addLog('⏳ جاري إيقاف المسح...', '');
+                addLog('⏳ جاري الإيقاف...', '');
             }
         }
     </script>
