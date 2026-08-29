@@ -352,16 +352,51 @@
             }
         }
 
-        // التحقق من اسم واحد (نسخة محسنة)
+        // ✅ التحقق من اسم واحد (نسخة محسنة ودقيقة)
         async function checkSingleName(name) {
             try {
-                const response = await fetch(`${apiUrl}${name}`, {
-                    signal: AbortSignal.timeout(2000)
+                // 1. نطلب الصفحة كاملة
+                const response = await fetch(`https://wa.me/${name}`, {
+                    signal: AbortSignal.timeout(8000)
                 });
-                const data = await response.json();
-                return data;
+
+                // 2. إذا كان توجيه، محجوز
+                if (response.redirected) {
+                    return { available: false, message: '❌ محجوز (توجيه)' };
+                }
+
+                // 3. نحلل محتوى الصفحة
+                const html = await response.text();
+
+                // 4. علامات الاسم المحجوز
+                const isTaken = html.includes('MESSAGE ON WHATSAPP') ||
+                                html.includes('إرسال رسالة') ||
+                                html.includes('Meta Verified') ||
+                                html.includes('Verified') ||
+                                html.includes('About this business') ||
+                                html.includes('حول هذا النشاط التجاري') ||
+                                html.includes('+') ||
+                                (html.includes('message') && html.includes('business'));
+
+                // 5. علامات الاسم المتاح
+                const isAvailable = html.includes('Chat on WhatsApp with @') ||
+                                    html.includes('Continue to WhatsApp Web') ||
+                                    html.includes('Open app') ||
+                                    html.includes('Download it now');
+
+                if (isAvailable) {
+                    return { available: true, message: '✅ متاح!' };
+                }
+
+                if (isTaken) {
+                    return { available: false, message: '❌ محجوز (حساب نشط)' };
+                }
+
+                // 6. افتراضياً، إذا لم نجد أي علامة
+                return { available: true, message: '✅ متاح (افتراضي)' };
+
             } catch (error) {
-                return { available: null, message: 'خطأ' };
+                return { available: null, message: '⚠️ خطأ في الاتصال' };
             }
         }
 
