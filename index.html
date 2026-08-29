@@ -205,7 +205,6 @@
             transition: width 0.3s;
             width: 0%;
         }
-        /* --- تنسيق الفوتر مع رقم الإصدار البارز --- */
         .footer {
             text-align: center;
             margin-top: 20px;
@@ -267,7 +266,6 @@
             <div class="log-entry" style="color: #484f58;">📋 سجل المسح يظهر هنا...</div>
         </div>
 
-        <!-- ✅ الفوتر مع رقم الإصدار البارز -->
         <div class="footer">
             <div>
                 🔗 <a href="https://wa.me" target="_blank">WhatsApp</a> ·
@@ -290,7 +288,6 @@
         let timerInterval = null;
 
         const letters = 'abcdefghijklmnopqrstuvwxyz';
-        const apiUrl = 'https://wa-checker-f9yb.onrender.com/check/';
 
         function updateStats(scanned, available) {
             document.getElementById('scannedCount').textContent = scanned;
@@ -334,10 +331,6 @@
             `;
             resultsBox.appendChild(item);
             resultsBox.scrollTop = resultsBox.scrollHeight;
-        }
-
-        async function checkSingleName(name) {
-            return { available: true, message: '🔍 محتمل' };
         }
 
         async function startScan() {
