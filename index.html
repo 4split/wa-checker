@@ -1,268 +1,69 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>التحقق من اسم واتساب</title>
-    <style>
-        /* التنسيقات العامة */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+<script>
+    // متغير لتأخير البحث أثناء الكتابة
+    let typingTimer;
+    const doneTypingInterval = 500; // 0.5 ثانية بعد التوقف عن الكتابة
+
+    // دالة البحث الرئيسية
+    async function checkUsername() {
+        const username = document.getElementById('username').value.trim();
+        const resultDiv = document.getElementById('result');
+
+        // إذا كان الاسم أقل من 3 أحرف، لا نبحث
+        if (username.length < 3) {
+            resultDiv.className = '';
+            resultDiv.innerHTML = '✏️ اكتب 3 أحرف على الأقل للبحث التلقائي';
+            return;
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0d1117, #161b22);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
+        // حالة التحميل
+        resultDiv.className = 'loading';
+        resultDiv.innerHTML = '⏳ جاري التحقق...';
 
-        .container {
-            background: #1c2333;
-            padding: 40px 35px;
-            border-radius: 24px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
-            max-width: 500px;
-            width: 100%;
-            border: 1px solid #30363d;
-            transition: 0.3s;
-        }
+        try {
+            const response = await fetch(`https://wa-checker-f9yb.onrender.com/check/${username}`);
+            const data = await response.json();
 
-        .container:hover {
-            border-color: #25d366;
-        }
-
-        h1 {
-            color: #ffffff;
-            font-size: 28px;
-            text-align: center;
-            margin-bottom: 8px;
-        }
-
-        .subtitle {
-            color: #8b949e;
-            text-align: center;
-            font-size: 14px;
-            margin-bottom: 30px;
-        }
-
-        .subtitle span {
-            color: #25d366;
-            font-weight: bold;
-        }
-
-        /* حقل الإدخال */
-        .input-group {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .input-group input {
-            flex: 1;
-            padding: 14px 18px;
-            border-radius: 12px;
-            border: 2px solid #30363d;
-            background: #0d1117;
-            color: #ffffff;
-            font-size: 16px;
-            direction: ltr;
-            outline: none;
-            transition: 0.3s;
-        }
-
-        .input-group input:focus {
-            border-color: #25d366;
-            box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.2);
-        }
-
-        .input-group input::placeholder {
-            color: #484f58;
-        }
-
-        .input-group button {
-            padding: 14px 28px;
-            border-radius: 12px;
-            border: none;
-            background: #25d366;
-            color: #ffffff;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-            white-space: nowrap;
-        }
-
-        .input-group button:hover {
-            background: #1da851;
-            transform: scale(1.03);
-        }
-
-        .input-group button:active {
-            transform: scale(0.97);
-        }
-
-        /* منطقة النتيجة */
-        #result {
-            background: #0d1117;
-            padding: 20px;
-            border-radius: 14px;
-            min-height: 70px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            font-weight: 500;
-            border: 2px solid #30363d;
-            transition: 0.4s;
-            color: #c9d1d9;
-            text-align: center;
-        }
-
-        #result.loading {
-            border-color: #f0883e;
-            color: #f0883e;
-        }
-
-        #result.available {
-            border-color: #25d366;
-            color: #25d366;
-        }
-
-        #result.taken {
-            border-color: #f85149;
-            color: #f85149;
-        }
-
-        #result.error {
-            border-color: #f0883e;
-            color: #f0883e;
-        }
-
-        /* مثال */
-        .example {
-            text-align: center;
-            margin-top: 18px;
-            color: #484f58;
-            font-size: 13px;
-        }
-
-        .example a {
-            color: #58a6ff;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        .example a:hover {
-            text-decoration: underline;
-        }
-
-        /* تذييل */
-        .footer {
-            text-align: center;
-            margin-top: 22px;
-            color: #484f58;
-            font-size: 12px;
-        }
-
-        .footer a {
-            color: #25d366;
-            text-decoration: none;
-        }
-
-        /* أيقونات */
-        .whatsapp-icon {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            background: #25d366;
-            border-radius: 50%;
-            text-align: center;
-            line-height: 20px;
-            color: white;
-            font-weight: bold;
-            font-size: 12px;
-            margin-left: 6px;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="container">
-        <h1>💬 واتساب تشيكر</h1>
-        <p class="subtitle">تحقق من توفر <span>اسم المستخدم</span> في واتساب</p>
-
-        <div class="input-group">
-            <input type="text" id="username" placeholder="أدخل اسم المستخدم..." dir="ltr" />
-            <button onclick="checkUsername()">🔍 بحث</button>
-        </div>
-
-        <div id="result">✏️ اكتب اسماً واضغط بحث</div>
-
-        <div class="example">
-            💡 جرب: <a onclick="fillExample('trh')">trh</a> ·
-            <a onclick="fillExample('test')">test</a> ·
-            <a onclick="fillExample('meta')">meta</a>
-        </div>
-
-        <div class="footer">
-            🔗 <a href="https://wa.me" target="_blank">WhatsApp</a> ·
-            مدعوم من <a href="https://render.com" target="_blank">Render</a>
-        </div>
-    </div>
-
-    <script>
-        async function checkUsername() {
-            const username = document.getElementById('username').value.trim();
-            const resultDiv = document.getElementById('result');
-
-            // تحقق من الإدخال
-            if (!username) {
-                resultDiv.className = 'error';
-                resultDiv.innerHTML = '⚠️ الرجاء إدخال اسم مستخدم';
-                return;
+            if (data.available) {
+                resultDiv.className = 'available';
+            } else {
+                resultDiv.className = 'taken';
             }
+            resultDiv.innerHTML = data.message;
 
-            // حالة التحميل
-            resultDiv.className = 'loading';
-            resultDiv.innerHTML = '⏳ جاري التحقق...';
+        } catch (error) {
+            resultDiv.className = 'error';
+            resultDiv.innerHTML = '⚠️ حدث خطأ في الاتصال بالخادم. حاول مرة أخرى.';
+            console.error('خطأ:', error);
+        }
+    }
 
-            try {
-                const response = await fetch(`https://wa-checker-f9yb.onrender.com/check/${username}`);
-                const data = await response.json();
+    // دالة لملء حقل الإدخال بالأمثلة
+    function fillExample(name) {
+        document.getElementById('username').value = name;
+        checkUsername();
+    }
 
-                if (data.available) {
-                    resultDiv.className = 'available';
-                } else {
-                    resultDiv.className = 'taken';
-                }
-                resultDiv.innerHTML = data.message;
+    // البحث التلقائي عند الكتابة
+    document.getElementById('username').addEventListener('input', function(e) {
+        clearTimeout(typingTimer);
+        const username = this.value.trim();
+        const resultDiv = document.getElementById('result');
 
-            } catch (error) {
-                resultDiv.className = 'error';
-                resultDiv.innerHTML = '⚠️ حدث خطأ في الاتصال بالخادم. حاول مرة أخرى.';
-                console.error('خطأ:', error);
-            }
+        if (username.length < 3) {
+            resultDiv.className = '';
+            resultDiv.innerHTML = '✏️ اكتب 3 أحرف على الأقل للبحث التلقائي';
+            return;
         }
 
-        // دالة لملء حقل الإدخال بالأمثلة
-        function fillExample(name) {
-            document.getElementById('username').value = name;
+        // انتظر 0.5 ثانية بعد توقف الكتابة ثم ابحث
+        typingTimer = setTimeout(checkUsername, doneTypingInterval);
+    });
+
+    // السماح بالضغط على Enter أيضاً
+    document.getElementById('username').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            clearTimeout(typingTimer);
             checkUsername();
         }
-
-        // السماح بالضغط على Enter
-        document.getElementById('username').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                checkUsername();
-            }
-        });
-    </script>
-
-</body>
-</html>
+    });
+</script>
