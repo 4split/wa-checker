@@ -1,14 +1,14 @@
 {
   "name": "wa-checker",
   "version": "1.0.0",
-  "description": "التحقق من توفر أسماء مستخدمين واتساب",
+  "description": "التحقق من أسماء واتساب",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
-    "axios": "^1.6.0",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "node-fetch": "^3.3.2"
   }
 }
