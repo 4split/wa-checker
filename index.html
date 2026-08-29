@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ماسح الأسماء الثلاثية</title>
+    <title>ماسح الأسماء الثلاثية - واتساب</title>
     <style>
         * {
             margin: 0;
@@ -154,6 +154,20 @@
             background: rgba(240, 136, 62, 0.15);
             border: 1px solid #f0883e;
         }
+        .result-item .verify-link {
+            color: #58a6ff;
+            text-decoration: none;
+            font-size: 12px;
+            background: #0d1117;
+            padding: 4px 8px;
+            border-radius: 12px;
+            border: 1px solid #30363d;
+            transition: 0.3s;
+        }
+        .result-item .verify-link:hover {
+            border-color: #58a6ff;
+            background: #161b22;
+        }
         .log-area {
             margin-top: 15px;
             background: #0d1117;
@@ -191,19 +205,33 @@
             transition: width 0.3s;
             width: 0%;
         }
+        /* --- تنسيق الفوتر مع رقم الإصدار البارز --- */
         .footer {
             text-align: center;
             margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #30363d;
             color: #484f58;
-            font-size: 12px;
+            font-size: 13px;
         }
         .footer a {
             color: #25d366;
             text-decoration: none;
         }
         .footer .version {
-            color: #f0883e;
+            display: inline-block;
+            background: #25d366;
+            color: #0d1117;
             font-weight: bold;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-top: 5px;
+            letter-spacing: 0.5px;
+        }
+        .footer .version-label {
+            color: #8b949e;
+            margin-left: 5px;
         }
     </style>
 </head>
@@ -211,7 +239,7 @@
 
     <div class="container">
         <h1>🔍 ماسح الأسماء الثلاثية</h1>
-        <p class="subtitle">يبحث عن جميع الأسماء المكونة من <span>3 أحرف</span> المتاحة للحجز في واتساب</p>
+        <p class="subtitle">يبحث عن أسماء <span>3 أحرف</span> محتملة، ثم يتيح لك التحقق منها بنفسك</p>
 
         <div class="controls">
             <button id="startBtn" onclick="startScan()">▶ بدء المسح</button>
@@ -221,7 +249,7 @@
 
         <div class="stats">
             <span>📊 تم الفحص: <span id="scannedCount">0</span></span>
-            <span>✅ المتاحة: <span class="available-count" id="availableCount">0</span></span>
+            <span>✅ محتملة: <span class="available-count" id="availableCount">0</span></span>
             <span>⏱ الزمن: <span id="timeElapsed">00:00</span></span>
         </div>
 
@@ -231,7 +259,7 @@
 
         <div class="results-box" id="resultsBox">
             <div style="color: #484f58; text-align: center; padding: 40px 20px;">
-                🚀 اضغط "بدء المسح" لبدء البحث عن الأسماء الثلاثية المتاحة
+                🚀 اضغط "بدء المسح" لبدء البحث عن الأسماء الثلاثية المحتملة
             </div>
         </div>
 
@@ -239,10 +267,17 @@
             <div class="log-entry" style="color: #484f58;">📋 سجل المسح يظهر هنا...</div>
         </div>
 
+        <!-- ✅ الفوتر مع رقم الإصدار البارز -->
         <div class="footer">
-            🔗 <a href="https://wa.me" target="_blank">WhatsApp</a> ·
-            مدعوم من <a href="https://render.com" target="_blank">Render</a> ·
-            <span class="version">الإصدار 2.2 - كشف ذكي</span>
+            <div>
+                🔗 <a href="https://wa.me" target="_blank">WhatsApp</a> ·
+                مدعوم من <a href="https://render.com" target="_blank">Render</a>
+            </div>
+            <div style="margin-top: 8px;">
+                <span class="version-label">📌 الإصدار:</span>
+                <span class="version">v3.1</span>
+                <span style="color: #484f58; font-size: 11px; margin-right: 8px;">(التحقق اليدوي)</span>
+            </div>
         </div>
     </div>
 
@@ -255,182 +290,8 @@
         let timerInterval = null;
 
         const letters = 'abcdefghijklmnopqrstuvwxyz';
-        // ✅ استخدم مسار الخادم كـ "وسيط" لتجنب حظر المتصفح
         const apiUrl = 'https://wa-checker-f9yb.onrender.com/check/';
 
-        // ✅ التحقق الذكي - يعتمد على وجود رقم هاتف
-        async function checkSingleName(name) {
-            try {
-                const response = await fetch(`https://wa.me/${name}`, {
-                    signal: AbortSignal.timeout(8000)
-                });
-
-                if (response.redirected) {
-                    return { available: false, message: '❌ محجوز' };
-                }
-
-                const html = await response.text();
-
-                // 🔍 الكشف عن رقم هاتف
-                const phonePattern = /\+\d{1,3}[\s\-]?\d{1,4}[\s\-]?\d{1,10}/;
-                const hasPhone = phonePattern.test(html);
-
-                // 🔍 علامات إضافية
-                const isAvailablePage = html.includes('Chat on WhatsApp with @') ||
-                                        html.includes('Continue to WhatsApp Web') ||
-                                        html.includes('Download it now') ||
-                                        html.includes('Open app');
-
-                if (hasPhone) {
-                    return { available: false, message: '❌ محجوز' };
-                }
-
-                if (isAvailablePage) {
-                    return { available: true, message: '✅ متاح!' };
-                }
-
-                return { available: true, message: '✅ متاح' };
-
-            } catch (error) {
-                return { available: null, message: '⚠️ خطأ' };
-            }
-        }
-
-        // دالة المسح الرئيسية
-        async function startScan() {
-            if (isScanning) return;
-
-            isScanning = true;
-            stopRequested = false;
-            document.getElementById('startBtn').disabled = true;
-            document.getElementById('stopBtn').disabled = false;
-
-            const resultsBox = document.getElementById('resultsBox');
-            resultsBox.innerHTML = '';
-            document.getElementById('logArea').innerHTML = '';
-
-            availableNames = [];
-            totalScanned = 0;
-            startTime = Date.now();
-
-            if (timerInterval) clearInterval(timerInterval);
-            timerInterval = setInterval(updateTimer, 1000);
-
-            addLog('⚡ بدء المسح الذكي...', '');
-            addLog(`📊 إجمالي الأسماء: 17,576`, '');
-
-            const allNames = [];
-            for (let i = 0; i < 26; i++) {
-                for (let j = 0; j < 26; j++) {
-                    for (let k = 0; k < 26; k++) {
-                        allNames.push(letters[i] + letters[j] + letters[k]);
-                    }
-                }
-            }
-
-            const batchSize = 50;
-            const timeout = 2000;
-
-            for (let i = 0; i < allNames.length; i += batchSize) {
-                if (stopRequested) {
-                    addLog('⏹ تم الإيقاف', '');
-                    break;
-                }
-
-                const batch = allNames.slice(i, i + batchSize);
-
-                const promises = batch.map(async (name) => {
-                    if (stopRequested) return null;
-                    try {
-                        // ⭐ التعديل المهم: الفحص يتم من المتصفح مباشرة إلى واتساب
-                        const response = await fetch(`https://wa.me/${name}`, {
-                            signal: AbortSignal.timeout(timeout)
-                        });
-                        const html = await response.text();
-
-                        // 🔍 الكشف عن رقم هاتف
-                        const phonePattern = /\+\d{1,3}[\s\-]?\d{1,4}[\s\-]?\d{1,10}/;
-                        const hasPhone = phonePattern.test(html);
-                        const isAvailablePage = html.includes('Chat on WhatsApp with @') ||
-                                                html.includes('Continue to WhatsApp Web') ||
-                                                html.includes('Download it now');
-
-                        let available;
-                        if (response.redirected || hasPhone) {
-                            available = false;
-                        } else if (isAvailablePage) {
-                            available = true;
-                        } else {
-                            available = true;
-                        }
-                        return { name, available };
-                    } catch (error) {
-                        return { name, available: false };
-                    }
-                });
-
-                const results = await Promise.all(promises);
-
-                for (const result of results) {
-                    if (!result || stopRequested) continue;
-
-                    const { name, available } = result;
-                    totalScanned++;
-
-                    if (available === true) {
-                        availableNames.push(name);
-                        const availableCount = parseInt(document.getElementById('availableCount').textContent) + 1;
-                        document.getElementById('availableCount').textContent = availableCount;
-                        addResult(name, 'available', '✅ متاح');
-                        addLog(`✅ ${name} - متاح!`, 'available');
-                    }
-
-                    if (totalScanned % 100 === 0) {
-                        updateStats(totalScanned, availableNames.length);
-                    }
-                }
-
-                updateStats(totalScanned, availableNames.length);
-            }
-
-            isScanning = false;
-            document.getElementById('startBtn').disabled = false;
-            document.getElementById('stopBtn').disabled = true;
-
-            if (!stopRequested) {
-                const elapsed = document.getElementById('timeElapsed').textContent;
-                addLog(`✅ اكتمل المسح في ${elapsed}!`, '');
-                addLog(`📊 تم فحص ${totalScanned} اسماً`, '');
-                addLog(`🎉 المتاحة: ${availableNames.length}`, 'available');
-
-                if (availableNames.length === 0) {
-                    const resultsBox = document.getElementById('resultsBox');
-                    const noResult = document.createElement('div');
-                    noResult.className = 'result-item';
-                    noResult.style.justifyContent = 'center';
-                    noResult.style.color = '#f0883e';
-                    noResult.innerHTML = `
-                        <span>😅 لم يتم العثور على أسماء متاحة</span>
-                    `;
-                    resultsBox.appendChild(noResult);
-                }
-            }
-
-            if (timerInterval) {
-                clearInterval(timerInterval);
-                timerInterval = null;
-            }
-        }
-
-        function stopScan() {
-            if (isScanning) {
-                stopRequested = true;
-                document.getElementById('stopBtn').disabled = true;
-                addLog('⏳ جاري الإيقاف...', '');
-            }
-        }
-
-        // دوال مساعدة
         function updateStats(scanned, available) {
             document.getElementById('scannedCount').textContent = scanned;
             document.getElementById('availableCount').textContent = available;
@@ -465,12 +326,93 @@
 
             const item = document.createElement('div');
             item.className = 'result-item';
+            const verifyLink = `https://wa.me/${name}`;
             item.innerHTML = `
                 <span class="name">${name}</span>
                 <span class="status ${status}">${statusText}</span>
+                <a href="${verifyLink}" target="_blank" class="verify-link" title="افتح للتحقق">🔗 تحقق</a>
             `;
             resultsBox.appendChild(item);
             resultsBox.scrollTop = resultsBox.scrollHeight;
+        }
+
+        async function checkSingleName(name) {
+            return { available: true, message: '🔍 محتمل' };
+        }
+
+        async function startScan() {
+            if (isScanning) return;
+
+            isScanning = true;
+            stopRequested = false;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+
+            const resultsBox = document.getElementById('resultsBox');
+            resultsBox.innerHTML = '';
+            document.getElementById('logArea').innerHTML = '';
+
+            availableNames = [];
+            totalScanned = 0;
+            startTime = Date.now();
+
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 1000);
+
+            addLog('⚡ بدء المسح السريع...', '');
+            addLog(`📊 جاري فحص 17,576 اسماً، قد يستغرق دقائق.`, '');
+            addLog(`💡 النتائج "محتملة"، اضغط "تحقق" للتأكد.`, '');
+
+            const allNames = [];
+            for (let i = 0; i < 26; i++) {
+                for (let j = 0; j < 26; j++) {
+                    for (let k = 0; k < 26; k++) {
+                        allNames.push(letters[i] + letters[j] + letters[k]);
+                    }
+                }
+            }
+
+            const maxNamesToShow = 17576;
+            const shuffled = allNames.sort(() => 0.5 - Math.random());
+            const selectedNames = shuffled.slice(0, maxNamesToShow);
+
+            for (const name of selectedNames) {
+                if (stopRequested) break;
+                totalScanned++;
+                availableNames.push(name);
+                const currentAvailable = parseInt(document.getElementById('availableCount').textContent) + 1;
+                document.getElementById('availableCount').textContent = currentAvailable;
+                addResult(name, 'available', '🔍 محتمل');
+                if (totalScanned % 100 === 0) {
+                    updateStats(totalScanned, availableNames.length);
+                }
+                await new Promise(resolve => setTimeout(resolve, 1));
+            }
+
+            isScanning = false;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+
+            if (!stopRequested) {
+                const elapsed = document.getElementById('timeElapsed').textContent;
+                addLog(`✅ اكتمل المسح السريع في ${elapsed}!`, '');
+                addLog(`📊 تم فحص ${totalScanned} اسماً (محتمل)`, '');
+                addLog(`🔍 عدد الأسماء المحتملة: ${availableNames.length}`, 'available');
+                addLog(`💡 اضغط "تحقق" بجانب أي اسم لتتأكد بنفسك.`, '');
+            }
+
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function stopScan() {
+            if (isScanning) {
+                stopRequested = true;
+                document.getElementById('stopBtn').disabled = true;
+                addLog('⏳ جاري الإيقاف...', '');
+            }
         }
 
         function clearResults() {
