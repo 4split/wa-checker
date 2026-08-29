@@ -1,12 +1,11 @@
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-<meta http-equiv="Pragma" content="no-cache" />
-<meta http-equiv="Expires" content="0" />
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <title>ماسح أسماء واتساب المتقدم</title>
     <style>
         * {
@@ -63,7 +62,8 @@
             color: #8b949e;
             font-size: 14px;
         }
-        .options select, .options input {
+        .options select,
+        .options input {
             padding: 8px 14px;
             border-radius: 10px;
             border: 2px solid #30363d;
@@ -73,7 +73,8 @@
             outline: none;
             transition: 0.3s;
         }
-        .options select:focus, .options input:focus {
+        .options select:focus,
+        .options input:focus {
             border-color: #25d366;
         }
         .options select option {
@@ -143,6 +144,10 @@
             color: #25d366;
             font-weight: bold;
         }
+        .stats .taken-count {
+            color: #f85149;
+            font-weight: bold;
+        }
 
         .results-box {
             background: #0d1117;
@@ -178,8 +183,14 @@
             animation: fadeIn 0.3s ease;
         }
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         .result-item:hover {
             border-color: #25d366;
@@ -227,6 +238,10 @@
         .result-item .actions .verify-btn {
             background: #238636;
             color: white;
+            text-decoration: none;
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 12px;
         }
         .result-item .actions .verify-btn:hover {
             background: #2ea043;
@@ -323,7 +338,6 @@
             margin-left: 5px;
         }
 
-        /* وضع التحميل */
         .loading-spinner {
             display: inline-block;
             width: 20px;
@@ -334,8 +348,12 @@
             animation: spin 0.8s linear infinite;
         }
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
@@ -378,7 +396,7 @@
         <div class="stats">
             <span>📊 تم الفحص: <span id="scannedCount">0</span></span>
             <span>✅ المتاحة: <span class="available-count" id="availableCount">0</span></span>
-            <span>❌ المحجوزة: <span id="takenCount">0</span></span>
+            <span>❌ المحجوزة: <span class="taken-count" id="takenCount">0</span></span>
             <span>⏱ الزمن: <span id="timeElapsed">00:00</span></span>
         </div>
 
@@ -418,7 +436,6 @@
         let startTime = null;
         let timerInterval = null;
 
-        // إعدادات الأحرف
         const charSets = {
             'en': 'abcdefghijklmnopqrstuvwxyz',
             'ar': 'ابتثجحخدذرزسشصضطظعغفقكلمنهوي',
@@ -426,7 +443,6 @@
             'all': 'abcdefghijklmnopqrstuvwxyz0123456789'
         };
 
-        // الحصول على طول الاسم المحدد
         function getLength() {
             const select = document.getElementById('lengthSelect');
             if (select.value === 'custom') {
@@ -435,20 +451,17 @@
             return parseInt(select.value);
         }
 
-        // الحصول على مجموعة الأحرف
         function getChars() {
             const set = document.getElementById('charSet').value;
             return charSets[set] || charSets['en'];
         }
 
-        // إظهار/إخفاء حقل الطول المخصص
         function toggleCustomLength() {
             const select = document.getElementById('lengthSelect');
             const div = document.getElementById('customLengthDiv');
             div.style.display = select.value === 'custom' ? 'flex' : 'none';
         }
 
-        // تحديث الإحصائيات
         function updateStats(scanned, available, taken) {
             document.getElementById('scannedCount').textContent = scanned;
             document.getElementById('availableCount').textContent = available;
@@ -490,7 +503,7 @@
                 <span class="name">${name}</span>
                 <span class="status ${status}">${statusText}</span>
                 <div class="actions">
-                    <a href="${verifyLink}" target="_blank" class="verify-btn" style="padding:4px 12px;border-radius:8px;background:#238636;color:white;text-decoration:none;font-size:12px;">🔗 تحقق</a>
+                    <a href="${verifyLink}" target="_blank" class="verify-btn">🔗 تحقق</a>
                     <button class="taken-btn" onclick="markTaken('${name}')">❌ محجوز</button>
                     <button class="available-btn" onclick="markAvailable('${name}')">✅ متاح</button>
                     <button class="delete-btn" onclick="deleteResult(this)">✖</button>
@@ -500,11 +513,10 @@
             resultsBox.scrollTop = resultsBox.scrollHeight;
         }
 
-        // توليد الأسماء
         function generateNames(chars, length) {
             const names = [];
             const total = Math.pow(chars.length, length);
-            const maxNames = Math.min(total, 100000); // حد أقصى 100,000 اسم
+            const maxNames = Math.min(total, 100000);
 
             function generate(current) {
                 if (current.length === length) {
@@ -520,7 +532,6 @@
             return names;
         }
 
-        // التحقق من اسم واحد
         async function checkSingleName(name) {
             try {
                 const response = await fetch(`/check/${name}`, {
@@ -533,7 +544,6 @@
             }
         }
 
-        // بدء المسح
         async function startScan() {
             if (isScanning) return;
 
@@ -659,17 +669,24 @@
         }
 
         function markTaken(name) {
-            // تحديث الإحصائيات
             const availableCount = parseInt(document.getElementById('availableCount').textContent);
             const takenCount = parseInt(document.getElementById('takenCount').textContent);
-            document.getElementById('availableCount').textContent = availableCount - 1;
-            document.getElementById('takenCount').textContent = takenCount + 1;
+            if (availableCount > 0) {
+                document.getElementById('availableCount').textContent = availableCount - 1;
+                document.getElementById('takenCount').textContent = takenCount + 1;
+            } else {
+                document.getElementById('takenCount').textContent = takenCount + 1;
+            }
 
-            // حذف العنصر من القائمة
             const items = document.querySelectorAll('.result-item');
             for (const item of items) {
                 if (item.querySelector('.name').textContent === name) {
-                    item.remove();
+                    const status = item.querySelector('.status');
+                    status.className = 'status taken';
+                    status.textContent = '❌ محجوز';
+                    // إزالة أزرار التحكم بعد التأكيد
+                    const actions = item.querySelector('.actions');
+                    actions.innerHTML = `<span style="color:#f85149;font-size:12px;">✅ تم التأكيد</span>`;
                     break;
                 }
             }
@@ -677,10 +694,25 @@
         }
 
         function markAvailable(name) {
-            // تحديث الإحصائيات (على افتراض أنه كان محجوز)
             const takenCount = parseInt(document.getElementById('takenCount').textContent);
+            const availableCount = parseInt(document.getElementById('availableCount').textContent);
             if (takenCount > 0) {
                 document.getElementById('takenCount').textContent = takenCount - 1;
+                document.getElementById('availableCount').textContent = availableCount + 1;
+            } else {
+                document.getElementById('availableCount').textContent = availableCount + 1;
+            }
+
+            const items = document.querySelectorAll('.result-item');
+            for (const item of items) {
+                if (item.querySelector('.name').textContent === name) {
+                    const status = item.querySelector('.status');
+                    status.className = 'status available';
+                    status.textContent = '✅ متاح';
+                    const actions = item.querySelector('.actions');
+                    actions.innerHTML = `<span style="color:#25d366;font-size:12px;">✅ تم التأكيد</span>`;
+                    break;
+                }
             }
             addLog(`📌 تم وضع علامة "${name}" كمتاح`, 'available');
         }
@@ -688,6 +720,14 @@
         function deleteResult(button) {
             const item = button.closest('.result-item');
             const name = item.querySelector('.name').textContent;
+            const status = item.querySelector('.status').textContent;
+            if (status.includes('متاح')) {
+                const count = parseInt(document.getElementById('availableCount').textContent);
+                if (count > 0) document.getElementById('availableCount').textContent = count - 1;
+            } else if (status.includes('محجوز')) {
+                const count = parseInt(document.getElementById('takenCount').textContent);
+                if (count > 0) document.getElementById('takenCount').textContent = count - 1;
+            }
             item.remove();
             addLog(`🗑 تم حذف "${name}" من النتائج`, '');
         }
@@ -700,6 +740,7 @@
 
             let text = '📊 نتائج ماسح أسماء واتساب\n';
             text += `📅 التاريخ: ${new Date().toLocaleString()}\n`;
+            text += `📏 طول الأسماء: ${getLength()} حروف\n\n`;
             text += `✅ الأسماء المتاحة (${availableNames.length}):\n`;
             availableNames.forEach(name => text += `  - ${name}\n`);
             text += `\n❌ الأسماء المحجوزة (${takenNames.length}):\n`;
@@ -716,7 +757,6 @@
             addLog('📥 تم تصدير النتائج بنجاح', 'success');
         }
 
-        // تهيئة
         toggleCustomLength();
     </script>
 
