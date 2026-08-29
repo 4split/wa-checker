@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ماسح الأسماء الثلاثية - واتساب</title>
+    <title>ماسح أسماء واتساب المتقدم</title>
     <style>
         * {
             margin: 0;
@@ -17,7 +17,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             background: #1c2333;
             padding: 30px;
@@ -41,6 +41,50 @@
             color: #25d366;
             font-weight: bold;
         }
+
+        /* خيارات البحث */
+        .options {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            background: #0d1117;
+            padding: 15px;
+            border-radius: 14px;
+            border: 1px solid #30363d;
+            align-items: center;
+            justify-content: center;
+        }
+        .options label {
+            color: #8b949e;
+            font-size: 14px;
+        }
+        .options select, .options input {
+            padding: 8px 14px;
+            border-radius: 10px;
+            border: 2px solid #30363d;
+            background: #0d1117;
+            color: #ffffff;
+            font-size: 14px;
+            outline: none;
+            transition: 0.3s;
+        }
+        .options select:focus, .options input:focus {
+            border-color: #25d366;
+        }
+        .options select option {
+            background: #1c2333;
+        }
+        .options .custom-length {
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+        .options .custom-length input {
+            width: 60px;
+            text-align: center;
+        }
+
         .controls {
             display: flex;
             gap: 12px;
@@ -75,6 +119,7 @@
         .controls button.stop-btn:hover {
             background: #da3633;
         }
+
         .stats {
             display: flex;
             gap: 20px;
@@ -94,6 +139,7 @@
             color: #25d366;
             font-weight: bold;
         }
+
         .results-box {
             background: #0d1117;
             border-radius: 14px;
@@ -114,6 +160,7 @@
             background: #30363d;
             border-radius: 10px;
         }
+
         .result-item {
             display: flex;
             justify-content: space-between;
@@ -124,6 +171,11 @@
             border-radius: 10px;
             border: 1px solid #30363d;
             transition: 0.3s;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         .result-item:hover {
             border-color: #25d366;
@@ -154,20 +206,49 @@
             background: rgba(240, 136, 62, 0.15);
             border: 1px solid #f0883e;
         }
-        .result-item .verify-link {
-            color: #58a6ff;
-            text-decoration: none;
+        .result-item .actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .result-item .actions button {
+            padding: 4px 12px;
+            border-radius: 8px;
+            border: none;
             font-size: 12px;
-            background: #0d1117;
-            padding: 4px 8px;
-            border-radius: 12px;
-            border: 1px solid #30363d;
+            font-weight: bold;
+            cursor: pointer;
             transition: 0.3s;
         }
-        .result-item .verify-link:hover {
-            border-color: #58a6ff;
-            background: #161b22;
+        .result-item .actions .verify-btn {
+            background: #238636;
+            color: white;
         }
+        .result-item .actions .verify-btn:hover {
+            background: #2ea043;
+        }
+        .result-item .actions .taken-btn {
+            background: #da3633;
+            color: white;
+        }
+        .result-item .actions .taken-btn:hover {
+            background: #f85149;
+        }
+        .result-item .actions .available-btn {
+            background: #1f6feb;
+            color: white;
+        }
+        .result-item .actions .available-btn:hover {
+            background: #388bfd;
+        }
+        .result-item .actions .delete-btn {
+            background: #21262d;
+            color: #8b949e;
+        }
+        .result-item .actions .delete-btn:hover {
+            background: #30363d;
+        }
+
         .log-area {
             margin-top: 15px;
             background: #0d1117;
@@ -190,6 +271,10 @@
         .log-area .log-entry.taken {
             color: #f85149;
         }
+        .log-area .log-entry.success {
+            color: #58a6ff;
+        }
+
         .progress-bar {
             width: 100%;
             height: 6px;
@@ -205,6 +290,7 @@
             transition: width 0.3s;
             width: 0%;
         }
+
         .footer {
             text-align: center;
             margin-top: 20px;
@@ -232,23 +318,63 @@
             color: #8b949e;
             margin-left: 5px;
         }
+
+        /* وضع التحميل */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #30363d;
+            border-top: 3px solid #25d366;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>🔍 ماسح الأسماء الثلاثية</h1>
-        <p class="subtitle">يبحث عن أسماء <span>3 أحرف</span> محتملة، ثم يتيح لك التحقق منها بنفسك</p>
+        <h1>🔍 ماسح أسماء واتساب</h1>
+        <p class="subtitle">يبحث عن أسماء <span>متاحة</span> بأطوال مختلفة، ويتيح لك التحقق منها</p>
+
+        <!-- خيارات البحث المتقدم -->
+        <div class="options">
+            <label for="lengthSelect">📏 طول الاسم:</label>
+            <select id="lengthSelect" onchange="toggleCustomLength()">
+                <option value="2">2 حروف</option>
+                <option value="3" selected>3 حروف</option>
+                <option value="4">4 حروف</option>
+                <option value="5">5 حروف</option>
+                <option value="custom">مخصص</option>
+            </select>
+            <div class="custom-length" id="customLengthDiv">
+                <label for="customLength">عدد الحروف:</label>
+                <input type="number" id="customLength" value="3" min="1" max="10" />
+            </div>
+            <label for="charSet">🔤 الأحرف:</label>
+            <select id="charSet">
+                <option value="en">إنجليزي (a-z)</option>
+                <option value="ar">عربي (ا-ي)</option>
+                <option value="num">أرقام (0-9)</option>
+                <option value="all">جميع الأحرف</option>
+            </select>
+        </div>
 
         <div class="controls">
             <button id="startBtn" onclick="startScan()">▶ بدء المسح</button>
             <button id="stopBtn" class="stop-btn" onclick="stopScan()" disabled>⏹ إيقاف</button>
             <button onclick="clearResults()">🗑 مسح النتائج</button>
+            <button onclick="exportResults()">📥 تصدير</button>
         </div>
 
         <div class="stats">
             <span>📊 تم الفحص: <span id="scannedCount">0</span></span>
-            <span>✅ محتملة: <span class="available-count" id="availableCount">0</span></span>
+            <span>✅ المتاحة: <span class="available-count" id="availableCount">0</span></span>
+            <span>❌ المحجوزة: <span id="takenCount">0</span></span>
             <span>⏱ الزمن: <span id="timeElapsed">00:00</span></span>
         </div>
 
@@ -258,7 +384,7 @@
 
         <div class="results-box" id="resultsBox">
             <div style="color: #484f58; text-align: center; padding: 40px 20px;">
-                🚀 اضغط "بدء المسح" لبدء البحث عن الأسماء الثلاثية المحتملة
+                🚀 اضغط "بدء المسح" لبدء البحث عن الأسماء المتاحة
             </div>
         </div>
 
@@ -273,8 +399,8 @@
             </div>
             <div style="margin-top: 8px;">
                 <span class="version-label">📌 الإصدار:</span>
-                <span class="version">v3.1</span>
-                <span style="color: #484f58; font-size: 11px; margin-right: 8px;">(التحقق اليدوي)</span>
+                <span class="version">v4.0</span>
+                <span style="color: #484f58; font-size: 11px; margin-right: 8px;">(بحث متقدم)</span>
             </div>
         </div>
     </div>
@@ -283,15 +409,47 @@
         let isScanning = false;
         let stopRequested = false;
         let availableNames = [];
+        let takenNames = [];
         let totalScanned = 0;
         let startTime = null;
         let timerInterval = null;
 
-        const letters = 'abcdefghijklmnopqrstuvwxyz';
+        // إعدادات الأحرف
+        const charSets = {
+            'en': 'abcdefghijklmnopqrstuvwxyz',
+            'ar': 'ابتثجحخدذرزسشصضطظعغفقكلمنهوي',
+            'num': '0123456789',
+            'all': 'abcdefghijklmnopqrstuvwxyz0123456789'
+        };
 
-        function updateStats(scanned, available) {
+        // الحصول على طول الاسم المحدد
+        function getLength() {
+            const select = document.getElementById('lengthSelect');
+            if (select.value === 'custom') {
+                return parseInt(document.getElementById('customLength').value) || 3;
+            }
+            return parseInt(select.value);
+        }
+
+        // الحصول على مجموعة الأحرف
+        function getChars() {
+            const set = document.getElementById('charSet').value;
+            return charSets[set] || charSets['en'];
+        }
+
+        // إظهار/إخفاء حقل الطول المخصص
+        function toggleCustomLength() {
+            const select = document.getElementById('lengthSelect');
+            const div = document.getElementById('customLengthDiv');
+            div.style.display = select.value === 'custom' ? 'flex' : 'none';
+        }
+
+        // تحديث الإحصائيات
+        function updateStats(scanned, available, taken) {
             document.getElementById('scannedCount').textContent = scanned;
             document.getElementById('availableCount').textContent = available;
+            document.getElementById('takenCount').textContent = taken;
+            const total = scanned > 0 ? scanned : 1;
             const progress = (scanned / 17576) * 100;
             document.getElementById('progressFill').style.width = Math.min(progress, 100) + '%';
         }
@@ -327,12 +485,51 @@
             item.innerHTML = `
                 <span class="name">${name}</span>
                 <span class="status ${status}">${statusText}</span>
-                <a href="${verifyLink}" target="_blank" class="verify-link" title="افتح للتحقق">🔗 تحقق</a>
+                <div class="actions">
+                    <a href="${verifyLink}" target="_blank" class="verify-btn" style="padding:4px 12px;border-radius:8px;background:#238636;color:white;text-decoration:none;font-size:12px;">🔗 تحقق</a>
+                    <button class="taken-btn" onclick="markTaken('${name}')">❌ محجوز</button>
+                    <button class="available-btn" onclick="markAvailable('${name}')">✅ متاح</button>
+                    <button class="delete-btn" onclick="deleteResult(this)">✖</button>
+                </div>
             `;
             resultsBox.appendChild(item);
             resultsBox.scrollTop = resultsBox.scrollHeight;
         }
 
+        // توليد الأسماء
+        function generateNames(chars, length) {
+            const names = [];
+            const total = Math.pow(chars.length, length);
+            const maxNames = Math.min(total, 100000); // حد أقصى 100,000 اسم
+
+            function generate(current) {
+                if (current.length === length) {
+                    names.push(current);
+                    return;
+                }
+                for (const char of chars) {
+                    generate(current + char);
+                    if (names.length >= maxNames) return;
+                }
+            }
+            generate('');
+            return names;
+        }
+
+        // التحقق من اسم واحد
+        async function checkSingleName(name) {
+            try {
+                const response = await fetch(`/check/${name}`, {
+                    signal: AbortSignal.timeout(5000)
+                });
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                return { available: null, message: '⚠️ خطأ' };
+            }
+        }
+
+        // بدء المسح
         async function startScan() {
             if (isScanning) return;
 
@@ -346,40 +543,69 @@
             document.getElementById('logArea').innerHTML = '';
 
             availableNames = [];
+            takenNames = [];
             totalScanned = 0;
             startTime = Date.now();
 
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(updateTimer, 1000);
 
-            addLog('⚡ بدء المسح السريع...', '');
-            addLog(`📊 جاري فحص 17,576 اسماً، قد يستغرق دقائق.`, '');
-            addLog(`💡 النتائج "محتملة"، اضغط "تحقق" للتأكد.`, '');
+            const length = getLength();
+            const chars = getChars();
+            const totalNames = Math.pow(chars.length, length);
 
-            const allNames = [];
-            for (let i = 0; i < 26; i++) {
-                for (let j = 0; j < 26; j++) {
-                    for (let k = 0; k < 26; k++) {
-                        allNames.push(letters[i] + letters[j] + letters[k]);
+            addLog(`⚡ بدء المسح...`, '');
+            addLog(`📏 الطول: ${length} حروف`, '');
+            addLog(`🔤 الأحرف: ${chars.length} حرف`, '');
+            addLog(`📊 إجمالي الأسماء: ${totalNames.toLocaleString()}`, '');
+
+            const allNames = generateNames(chars, length);
+            const batchSize = 10;
+            const delay = 100;
+
+            for (let i = 0; i < allNames.length; i += batchSize) {
+                if (stopRequested) {
+                    addLog('⏹ تم الإيقاف', '');
+                    break;
+                }
+
+                const batch = allNames.slice(i, i + batchSize);
+
+                const promises = batch.map(async (name) => {
+                    if (stopRequested) return null;
+                    const result = await checkSingleName(name);
+                    return { name, result };
+                });
+
+                const results = await Promise.all(promises);
+
+                for (const item of results) {
+                    if (!item || stopRequested) continue;
+
+                    const { name, result } = item;
+                    totalScanned++;
+
+                    if (result.available === true) {
+                        availableNames.push(name);
+                        addResult(name, 'available', '✅ متاح');
+                        addLog(`✅ ${name} - متاح!`, 'available');
+                    } else if (result.available === false) {
+                        takenNames.push(name);
+                        addLog(`❌ ${name} - محجوز`, 'taken');
+                    } else {
+                        addLog(`❓ ${name} - غير معروف`, '');
+                    }
+
+                    if (totalScanned % 10 === 0) {
+                        updateStats(totalScanned, availableNames.length, takenNames.length);
                     }
                 }
-            }
 
-            const maxNamesToShow = 17576;
-            const shuffled = allNames.sort(() => 0.5 - Math.random());
-            const selectedNames = shuffled.slice(0, maxNamesToShow);
+                updateStats(totalScanned, availableNames.length, takenNames.length);
 
-            for (const name of selectedNames) {
-                if (stopRequested) break;
-                totalScanned++;
-                availableNames.push(name);
-                const currentAvailable = parseInt(document.getElementById('availableCount').textContent) + 1;
-                document.getElementById('availableCount').textContent = currentAvailable;
-                addResult(name, 'available', '🔍 محتمل');
-                if (totalScanned % 100 === 0) {
-                    updateStats(totalScanned, availableNames.length);
+                if (!stopRequested && i + batchSize < allNames.length) {
+                    await new Promise(resolve => setTimeout(resolve, delay));
                 }
-                await new Promise(resolve => setTimeout(resolve, 1));
             }
 
             isScanning = false;
@@ -388,10 +614,10 @@
 
             if (!stopRequested) {
                 const elapsed = document.getElementById('timeElapsed').textContent;
-                addLog(`✅ اكتمل المسح السريع في ${elapsed}!`, '');
-                addLog(`📊 تم فحص ${totalScanned} اسماً (محتمل)`, '');
-                addLog(`🔍 عدد الأسماء المحتملة: ${availableNames.length}`, 'available');
-                addLog(`💡 اضغط "تحقق" بجانب أي اسم لتتأكد بنفسك.`, '');
+                addLog(`✅ اكتمل المسح في ${elapsed}!`, 'success');
+                addLog(`📊 تم فحص ${totalScanned} اسماً`, 'success');
+                addLog(`✅ المتاحة: ${availableNames.length}`, 'available');
+                addLog(`❌ المحجوزة: ${takenNames.length}`, 'taken');
             }
 
             if (timerInterval) {
@@ -418,14 +644,76 @@
                 <div class="log-entry" style="color: #484f58;">📋 تم مسح السجل...</div>
             `;
             availableNames = [];
+            takenNames = [];
             totalScanned = 0;
-            updateStats(0, 0);
+            updateStats(0, 0, 0);
             document.getElementById('timeElapsed').textContent = '00:00';
             if (timerInterval) {
                 clearInterval(timerInterval);
                 timerInterval = null;
             }
         }
+
+        function markTaken(name) {
+            // تحديث الإحصائيات
+            const availableCount = parseInt(document.getElementById('availableCount').textContent);
+            const takenCount = parseInt(document.getElementById('takenCount').textContent);
+            document.getElementById('availableCount').textContent = availableCount - 1;
+            document.getElementById('takenCount').textContent = takenCount + 1;
+
+            // حذف العنصر من القائمة
+            const items = document.querySelectorAll('.result-item');
+            for (const item of items) {
+                if (item.querySelector('.name').textContent === name) {
+                    item.remove();
+                    break;
+                }
+            }
+            addLog(`📌 تم وضع علامة "${name}" كمحجوز`, 'taken');
+        }
+
+        function markAvailable(name) {
+            // تحديث الإحصائيات (على افتراض أنه كان محجوز)
+            const takenCount = parseInt(document.getElementById('takenCount').textContent);
+            if (takenCount > 0) {
+                document.getElementById('takenCount').textContent = takenCount - 1;
+            }
+            addLog(`📌 تم وضع علامة "${name}" كمتاح`, 'available');
+        }
+
+        function deleteResult(button) {
+            const item = button.closest('.result-item');
+            const name = item.querySelector('.name').textContent;
+            item.remove();
+            addLog(`🗑 تم حذف "${name}" من النتائج`, '');
+        }
+
+        function exportResults() {
+            if (availableNames.length === 0 && takenNames.length === 0) {
+                alert('لا توجد نتائج للتصدير!');
+                return;
+            }
+
+            let text = '📊 نتائج ماسح أسماء واتساب\n';
+            text += `📅 التاريخ: ${new Date().toLocaleString()}\n`;
+            text += `✅ الأسماء المتاحة (${availableNames.length}):\n`;
+            availableNames.forEach(name => text += `  - ${name}\n`);
+            text += `\n❌ الأسماء المحجوزة (${takenNames.length}):\n`;
+            takenNames.forEach(name => text += `  - ${name}\n`);
+
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `wa-names-${new Date().toISOString().slice(0,10)}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            addLog('📥 تم تصدير النتائج بنجاح', 'success');
+        }
+
+        // تهيئة
+        toggleCustomLength();
     </script>
 
 </body>
