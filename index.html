@@ -311,7 +311,6 @@
             entry.textContent = message;
             logArea.appendChild(entry);
             logArea.scrollTop = logArea.scrollHeight;
-            // حذف السجلات القديمة إذا كثرت
             if (logArea.children.length > 100) {
                 logArea.removeChild(logArea.firstChild);
             }
@@ -320,8 +319,6 @@
         // إضافة نتيجة
         function addResult(name, status, statusText) {
             const resultsBox = document.getElementById('resultsBox');
-
-            // حذف رسالة "لا توجد نتائج" إذا كانت موجودة
             const placeholder = resultsBox.querySelector('.placeholder');
             if (placeholder) placeholder.remove();
 
@@ -355,20 +352,20 @@
             }
         }
 
-        // التحقق من اسم واحد
+        // التحقق من اسم واحد (نسخة محسنة)
         async function checkSingleName(name) {
             try {
                 const response = await fetch(`${apiUrl}${name}`, {
-                    signal: AbortSignal.timeout(5000)
+                    signal: AbortSignal.timeout(2000)
                 });
                 const data = await response.json();
                 return data;
             } catch (error) {
-                return { available: null, message: 'خطأ في الاتصال' };
+                return { available: null, message: 'خطأ' };
             }
         }
 
-        // دالة المسح الرئيسية
+        // دالة المسح الرئيسية (سريعة جداً) 🚀
         async function startScan() {
             if (isScanning) return;
 
@@ -377,7 +374,6 @@
             document.getElementById('startBtn').disabled = true;
             document.getElementById('stopBtn').disabled = false;
 
-            // إعادة تعيين
             const resultsBox = document.getElementById('resultsBox');
             resultsBox.innerHTML = '';
             document.getElementById('logArea').innerHTML = '';
@@ -386,11 +382,10 @@
             totalScanned = 0;
             startTime = Date.now();
 
-            // بدء المؤقت
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(updateTimer, 1000);
 
-            addLog('🚀 بدء المسح الشامل للأسماء الثلاثية...', '');
+            addLog('⚡ بدء المسح السريع جداً...', '');
             addLog(`📊 إجمالي الأسماء الممكنة: 17,576`, '');
 
             // توليد جميع الأسماء الثلاثية
@@ -403,52 +398,55 @@
                 }
             }
 
-            // المسح على دفعات (batch) لتجنب إغراق الخادم
-            const batchSize = 5;
-            const delay = 200; // 200ms بين الدفعات
+            // ⚡ إعدادات السرعة القصوى
+            const batchSize = 50;
+            const timeout = 2000;
 
             for (let i = 0; i < allNames.length; i += batchSize) {
                 if (stopRequested) {
-                    addLog('⏹ تم إيقاف المسح يدوياً', '');
+                    addLog('⏹ تم الإيقاف', '');
                     break;
                 }
 
                 const batch = allNames.slice(i, i + batchSize);
 
-                for (const name of batch) {
-                    if (stopRequested) break;
+                // ⚡ إرسال جميع الطلبات معاً (متوازي بالكامل)
+                const promises = batch.map(async (name) => {
+                    if (stopRequested) return null;
+                    try {
+                        const response = await fetch(`${apiUrl}${name}`, {
+                            signal: AbortSignal.timeout(timeout)
+                        });
+                        const data = await response.json();
+                        return { name, data };
+                    } catch (error) {
+                        return { name, data: { available: null, message: 'خطأ' } };
+                    }
+                });
 
+                const results = await Promise.all(promises);
+
+                // معالجة النتائج بسرعة
+                for (const result of results) {
+                    if (!result || stopRequested) continue;
+
+                    const { name, data } = result;
                     totalScanned++;
-                    const result = await checkSingleName(name);
 
-                    // تحديث الإحصائيات
-                    const availableCount = document.getElementById('availableCount').textContent;
-
-                    if (result.available === true) {
+                    if (data.available === true) {
                         availableNames.push(name);
-                        const newCount = parseInt(availableCount) + 1;
-                        document.getElementById('availableCount').textContent = newCount;
+                        const availableCount = parseInt(document.getElementById('availableCount').textContent) + 1;
+                        document.getElementById('availableCount').textContent = availableCount;
                         addResult(name, 'available', '✅ متاح');
-                        addLog(`✅ ${name} - متاح للحجز!`, 'available');
-                    } else if (result.available === false) {
-                        addLog(`❌ ${name} - محجوز`, 'taken');
-                    } else {
-                        addLog(`⚠️ ${name} - خطأ في التحقق`, 'unknown');
+                        addLog(`✅ ${name} - متاح!`, 'available');
                     }
 
-                    // تحديث الإحصائيات كل 10 أسماء
-                    if (totalScanned % 10 === 0) {
+                    if (totalScanned % 100 === 0) {
                         updateStats(totalScanned, availableNames.length);
                     }
                 }
 
-                // تحديث الإحصائيات بعد كل دفعة
                 updateStats(totalScanned, availableNames.length);
-
-                // انتظر قليلاً بين الدفعات
-                if (!stopRequested && i + batchSize < allNames.length) {
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                }
             }
 
             // انتهى المسح
@@ -457,11 +455,11 @@
             document.getElementById('stopBtn').disabled = true;
 
             if (!stopRequested) {
-                addLog(`✅ اكتمل المسح!`, '');
+                const elapsed = document.getElementById('timeElapsed').textContent;
+                addLog(`✅ اكتمل المسح في ${elapsed}!`, '');
                 addLog(`📊 تم فحص ${totalScanned} اسماً`, '');
-                addLog(`🎉 عدد الأسماء المتاحة: ${availableNames.length}`, 'available');
+                addLog(`🎉 الأسماء المتاحة: ${availableNames.length}`, 'available');
 
-                // إضافة رسالة إذا لم يتم العثور على أسماء
                 if (availableNames.length === 0) {
                     const resultsBox = document.getElementById('resultsBox');
                     const noResult = document.createElement('div');
@@ -469,7 +467,7 @@
                     noResult.style.justifyContent = 'center';
                     noResult.style.color = '#f0883e';
                     noResult.innerHTML = `
-                        <span>😅 لم يتم العثور على أسماء ثلاثية متاحة حالياً</span>
+                        <span>😅 لم يتم العثور على أسماء متاحة</span>
                     `;
                     resultsBox.appendChild(noResult);
                 }
@@ -488,15 +486,6 @@
                 document.getElementById('stopBtn').disabled = true;
                 addLog('⏳ جاري إيقاف المسح...', '');
             }
-        }
-
-        // عرض الأسماء المتاحة في نافذة منفصلة
-        function showAvailableNames() {
-            if (availableNames.length === 0) {
-                alert('لا توجد أسماء متاحة حالياً');
-                return;
-            }
-            alert(`الأسماء المتاحة (${availableNames.length}):\n\n${availableNames.join('\n')}`);
         }
     </script>
 
